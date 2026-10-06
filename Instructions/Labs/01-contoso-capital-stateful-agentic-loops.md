@@ -6,6 +6,7 @@ lab:
   level: 400
   islab: true
   status: 'released'
+  Start: 'October 6, 2026'
 ---
 
 # Design stateful agentic loops with Microsoft Foundry Agent Service

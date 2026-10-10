@@ -1,3 +1,6 @@
+// Lab 02 infrastructure: a Foundry project with one model deployment for the agents,
+// plus Application Insights so agent orchestration runs can be traced.
+
 targetScope = 'resourceGroup'
 param location string = resourceGroup().location
 param environmentName string
@@ -12,6 +15,9 @@ var projectName = 'lab02-${take(environmentName, 12)}'
 var workspaceName = 'log-lab02-${take(suffix, 18)}'
 var insightsName = 'appi-lab02-${take(suffix, 18)}'
 
+// Foundry resource (AIServices account). Hosts the model deployment and the project.
+// allowProjectManagement makes this a Foundry resource that can contain projects;
+// customSubDomainName is what makes the <name>.services.ai.azure.com endpoint and Entra ID auth work.
 resource account 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
 	name: accountName
 	location: location
@@ -26,6 +32,10 @@ resource account 'Microsoft.CognitiveServices/accounts@2025-06-01' = {
 	}
 }
 
+// Foundry project: the workspace the lab's Python code connects to (via FOUNDRY_PROJECT_ENDPOINT)
+// to create and run agents.
+// dependsOn the model deployment to serialize child operations on the account; creating
+// the project and deployment in parallel can fail with a conflict on the parent account.
 resource project 'Microsoft.CognitiveServices/accounts/projects@2025-06-01' = {
 	parent: account
 	name: projectName
@@ -37,6 +47,7 @@ resource project 'Microsoft.CognitiveServices/accounts/projects@2025-06-01' = {
 	]
 }
 
+// Log Analytics workspace: storage backend for the Application Insights telemetry below.
 resource workspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
 	name: workspaceName
 	location: location
@@ -46,6 +57,8 @@ resource workspace 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
 	}
 }
 
+// Application Insights: receives OpenTelemetry traces of agent runs (tool calls, handoffs,
+// model calls) so the multi-agent orchestration can be inspected.
 resource insights 'Microsoft.Insights/components@2020-02-02' = {
 	name: insightsName
 	location: location
@@ -56,6 +69,9 @@ resource insights 'Microsoft.Insights/components@2020-02-02' = {
 	}
 }
 
+// Project connection to Application Insights. This is what enables the Foundry portal's
+// Tracing view for the project, and lets the SDK look up the App Insights connection string
+// from the project instead of the lab code needing it as a separate setting.
 resource tracingConnection 'Microsoft.CognitiveServices/accounts/projects/connections@2025-06-01' = {
 	parent: project
 	name: insights.name
@@ -72,6 +88,9 @@ resource tracingConnection 'Microsoft.CognitiveServices/accounts/projects/connec
 	}
 }
 
+// Model deployment the agents call. Its name (not the underlying model name) is what the
+// lab code references, exported as FOUNDRY_MODEL_NAME.
+// Capacity 10 = 10K tokens/min, enough for the lab but may throttle under heavy runs.
 resource deployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01' = {
 	parent: account
 	name: modelDeploymentName
@@ -82,8 +101,10 @@ resource deployment 'Microsoft.CognitiveServices/accounts/deployments@2025-06-01
 	}
 }
 
+// Outputs become environment variables (e.g. written to .env by azd) consumed by the lab code.
 output FOUNDRY_PROJECT_ENDPOINT string = 'https://${account.name}.services.ai.azure.com/api/projects/${project.name}'
 output FOUNDRY_PROJECT_ID string = project.id
 output FOUNDRY_MODEL_NAME string = deployment.name
 output APPLICATIONINSIGHTS_RESOURCE_ID string = insights.id
+// customerId is the workspace GUID used for querying logs, not the ARM resource ID.
 output LOG_ANALYTICS_WORKSPACE_ID string = workspace.properties.customerId

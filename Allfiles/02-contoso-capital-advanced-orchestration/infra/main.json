@@ -5,7 +5,7 @@
     "_generator": {
       "name": "bicep",
       "version": "0.47.16.16243",
-      "templateHash": "8566943002394385540"
+      "templateHash": "8025833711377539082"
     }
   },
   "parameters": {
@@ -75,7 +75,8 @@
         "displayName": "[variables('projectName')]"
       },
       "dependsOn": [
-        "[resourceId('Microsoft.CognitiveServices/accounts', variables('accountName'))]"
+        "[resourceId('Microsoft.CognitiveServices/accounts', variables('accountName'))]",
+        "[resourceId('Microsoft.CognitiveServices/accounts/deployments', variables('accountName'), parameters('modelDeploymentName'))]"
       ]
     },
     {

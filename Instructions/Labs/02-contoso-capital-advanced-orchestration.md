@@ -144,7 +144,7 @@ Each placeholder marks incomplete code. Copy each supplied snippet into its plac
 
 ```python
 # LAB PLACEHOLDER 1: Replace this line with the Task 1 sample.
-raise NotImplementedError("Complete select_execution_pattern in Task 1")
+raise NotImplementedError("Complete select_execution_pattern in Task 1")    
 ```
 
 ```python

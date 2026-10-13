@@ -93,6 +93,7 @@ def ready_tasks(tasks: list[dict[str, Any]], completed: dict[str, Any]) -> list[
         blocked = ", ".join(task["id"] for task in unfinished)
         raise RuntimeError(f"Plan deadlock: blocked tasks: {blocked}")
     return ready
+
 def build_handoff(task: dict[str, Any], completed: dict[str, Any], correlation_id: str) -> dict[str, Any]:
     """Learner task: construct and size-check a context-preserving envelope."""
     # LAB PLACEHOLDER 3: Replace this line with the Task 3 sample.
@@ -178,5 +179,9 @@ ROOT_INSTRUCTIONS=(
 )
 
 def main()->None:
-    p=argparse.ArgumentParser();p.add_argument("--input",type=Path,default=Path("assets/research-query.json"));a=p.parse_args();logging.basicConfig(level=logging.INFO,format="%(levelname)s %(message)s");print(json.dumps(run(a.input),indent=2))
+    p=argparse.ArgumentParser()
+    p.add_argument("--input",type=Path,default=Path("assets/research-query.json"))
+    a=p.parse_args()
+    logging.basicConfig(level=logging.INFO,format="%(levelname)s %(message)s")
+    print(json.dumps(run(a.input),indent=2))
 if __name__=="__main__":main()

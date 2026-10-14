@@ -1,3 +1,8 @@
 __pycache__/
 *.py[cod]
 .venv/
+
+# Environment files (secrets)
+.env
+.env.*
+!.env.example

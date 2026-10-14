@@ -225,13 +225,11 @@ def call_agent(openai: Any, content: str) -> Any:
     return openai.responses.create(input=content)
 
 def run(path: Path) -> dict[str, Any]:
-    # Input file (assets/research-query.json) holds: the user "query", a
-    # "complexity_hint" (simple/complex), and a "registry" of specialist agents
-    # (name -> instructions).
+    # Input file (assets/research-query.json) holds: the user "query", a "complexity_hint" (simple/complex),
+    # and a "registry" of specialist agents (name -> instructions).
     data=json.loads(path.read_text(encoding="utf-8"))
     started=time.perf_counter()
-    # One ID shared by every handoff in this run, so the calls can be linked
-    # together in logs and traces.
+    # One ID shared by every handoff in this run, so the calls can be linked together in logs and traces.
     correlation_id=str(uuid.uuid4())
 
     # Connect to the Microsoft Foundry project. DefaultAzureCredential uses your
@@ -239,9 +237,8 @@ def run(path: Path) -> dict[str, Any]:
     project=AIProjectClient(endpoint=os.environ["FOUNDRY_PROJECT_ENDPOINT"],credential=DefaultAzureCredential())
     model=os.environ["FOUNDRY_MODEL_NAME"]
 
-    # Create (or add a new version of) the planner agent. Its instructions are
-    # ROOT_INSTRUCTIONS with the registry JSON appended, so it knows which
-    # specialists it may assign tasks to.
+    # Create (or add a new version of) the planner agent. Its instructions are ROOT_INSTRUCTIONS with 
+    # the registry JSON appended, so it knows which specialists it may assign tasks to.
     planner=project.agents.create_version(agent_name="research-planner",definition=PromptAgentDefinition(model=model,instructions=(ROOT_INSTRUCTIONS + json.dumps(data["registry"]))))
     # Create one agent per registry entry, named after its key (financial-data,
     # macro-risk, ...). Result: registry name -> agent name.
